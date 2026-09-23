@@ -1,18 +1,21 @@
-// 1. Create a logical folder in Jenkins for the Super Seed to organize things
+// 1. Optional: Create a logical folder in Jenkins to organize your generated pipelines
 folder('automated-pipelines') {
     description('All pipelines in this folder are completely managed by the Super Seed.')
 }
 
-// 2. Instruct the Super Seed to scan your repository for team-specific DSL files
-// This tells Jenkins: "Find every groovy file inside the 'teams' folder and run it"
-steps {
-    dsl {
-        external('jobs/teams/**/*.groovy') 
-        
-        // Crucial: If a team deletes their file from Git, Jenkins deletes their pipeline automatically
-        removeAction('DELETE') 
-        
-        // Crucial: If a team modifies a view/folder structure, update it automatically
-        removeViewAction('DELETE')
+// 2. Corrected Wrapper: Explicitly declare the master job that does the scanning
+freeStyleJob('Master-Super-Seed') {
+    description('This job automatically scans the Git repo for team-specific DSL scripts.')
+
+    // Tell this job where to execute the scan step
+    steps {
+        dsl {
+            // Scans the repo for any team scripts located inside jobs/teams/
+            external('jobs/teams/**/*.groovy') 
+            
+            // Keeps Jenkins clean: deletes pipelines if their Groovy file is deleted from Git
+            removeAction('DELETE') 
+            removeViewAction('DELETE')
+        }
     }
 }
