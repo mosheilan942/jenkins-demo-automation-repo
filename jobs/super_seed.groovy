@@ -1,19 +1,26 @@
-// 1. Optional: Create a logical folder in Jenkins to organize your generated pipelines
+// 1. Optional folder structure
 folder('automated-pipelines') {
     description('All pipelines in this folder are completely managed by the Super Seed.')
 }
 
-// 2. Corrected Wrapper: Explicitly declare the master job that does the scanning
+// 2. The Master Scanning Job definition
 freeStyleJob('Master-Super-Seed') {
-    description('This job automatically scans the Git repo for team-specific DSL scripts.')
+    description('This job automatically clones the Git repo and scans for team-specific DSL scripts.')
 
-    // Tell this job where to execute the scan step
+    // FIX: Tell this generated job where to pull its files from!
+    scm {
+        git {
+            remote {
+                url('https://github.com/mosheilan942/jenkins-demo-automation-repo.git')
+            }
+            branch('main') // or */master depending on your repository
+        }
+    }
+
+    // Now when the job runs, it clones the repo first, making this path valid!
     steps {
         dsl {
-            // Scans the repo for any team scripts located inside jobs/teams/
             external('jobs/teams/**/*.groovy') 
-            
-            // Keeps Jenkins clean: deletes pipelines if their Groovy file is deleted from Git
             removeAction('DELETE') 
             removeViewAction('DELETE')
         }
